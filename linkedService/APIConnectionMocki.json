@@ -1,0 +1,12 @@
+{
+	"name": "APIConnectionMocki",
+	"properties": {
+		"annotations": [],
+		"type": "HttpServer",
+		"typeProperties": {
+			"url": "https://mocki.io/v1/c2e47bfb-bec0-4afe-a512-2b570f8af6e9",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Anonymous"
+		}
+	}
+}
