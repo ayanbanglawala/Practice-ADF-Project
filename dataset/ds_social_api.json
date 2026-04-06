@@ -1,0 +1,17 @@
+{
+	"name": "ds_social_api",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "APIConnectionMocki",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "HttpServerLocation"
+			}
+		},
+		"schema": {}
+	}
+}
