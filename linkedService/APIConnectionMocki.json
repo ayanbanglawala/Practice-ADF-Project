@@ -4,7 +4,7 @@
 		"annotations": [],
 		"type": "HttpServer",
 		"typeProperties": {
-			"url": "https://mocki.io/v1/c2e47bfb-bec0-4afe-a512-2b570f8af6e9",
+			"url": "https://mocki.io/v1/fc2a4c15-a04c-4c72-893b-d5a62bea5b5f",
 			"enableServerCertificateValidation": true,
 			"authenticationType": "Anonymous"
 		}
