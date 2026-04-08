@@ -1,0 +1,21 @@
+{
+	"name": "Campaign_Parquet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_connection",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "campaign_silver.parquet",
+				"folderPath": "campaign",
+				"fileSystem": "silver"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	}
+}

@@ -40,6 +40,13 @@
 						"type": "DatasetReference"
 					},
 					"name": "sinkAPIToADLS"
+				},
+				{
+					"dataset": {
+						"referenceName": "Campaign_Parquet",
+						"type": "DatasetReference"
+					},
+					"name": "sinkCampaign"
 				}
 			],
 			"transformations": [
@@ -173,7 +180,15 @@
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> sinkAPIToADLS"
+				"     skipDuplicateMapOutputs: true) ~> sinkAPIToADLS",
+				"aggregateCampaign sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sinkCampaign"
 			]
 		}
 	}
