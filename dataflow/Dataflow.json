@@ -60,6 +60,15 @@
 				},
 				{
 					"name": "aggregate"
+				},
+				{
+					"name": "DerivedCampaign"
+				},
+				{
+					"name": "aggregate1"
+				},
+				{
+					"name": "aggregate2"
 				}
 			],
 			"scriptLines": [
@@ -143,6 +152,11 @@
 				"          reaction_type = last(reaction_type),",
 				"          sentiment_score = last(sentiment_score),",
 				"          user_id = last(user_id)) ~> aggregate",
+				"Campaign derive(budget_usd = coalesce(toDecimal(budget_usd), 0.0),",
+				"          client_id = coalesce(client_id, 'UNKNOWN'),",
+				"          campaign_name = trim(campaign_name)) ~> DerivedCampaign",
+				"aggregate2 aggregate() ~> aggregate1",
+				"DerivedCampaign aggregate() ~> aggregate2",
 				"aggregatededuplication sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'parquet',",
