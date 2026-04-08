@@ -24,6 +24,7 @@
 					],
 					"storeSettings": {
 						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
 						"enablePartitionDiscovery": false
 					},
 					"formatSettings": {
@@ -114,10 +115,56 @@
 										"p_folder_name": {
 											"value": "@if(\n    contains(item().name, 'performance'), \n    'social_post_performance', \n    if(\n        contains(item().name, 'campaign'), \n        'campaign_lookup',\n        'unclassified_data'\n    )\n)",
 											"type": "Expression"
+										},
+										"p_filename": {
+											"value": "@if(\n    contains(item().name, 'performance'), \n    concat('social_post_performance_', formatDateTime(utcNow(), 'yyyyMMdd_HHmmss'), '.csv'), \n    if(\n        contains(item().name, 'campaign'), \n        concat('campaign_lookup_', formatDateTime(utcNow(), 'yyyyMMdd_HHmmss'), '.csv'),\n        concat('unclassified_', item().name)\n    )\n)",
+											"type": "Expression"
 										}
 									}
 								}
 							]
+						},
+						{
+							"name": "Delete file after ingestion",
+							"type": "Delete",
+							"dependsOn": [
+								{
+									"activity": "Copy file to bronze",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "ds_adls_allfiles_source",
+									"type": "DatasetReference",
+									"parameters": {
+										"p_filename": "@item().name"
+									}
+								},
+								"logStorageSettings": {
+									"linkedServiceName": {
+										"referenceName": "ls_adls_connection",
+										"type": "LinkedServiceReference"
+									},
+									"path": "load/deletelogs"
+								},
+								"enableLogging": true,
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							}
 						}
 					]
 				}

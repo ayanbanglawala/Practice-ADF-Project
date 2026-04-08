@@ -1,0 +1,165 @@
+{
+	"name": "Dataflow",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_read_performance_csvs",
+						"type": "DatasetReference"
+					},
+					"name": "performance"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_read_api_jsons",
+						"type": "DatasetReference"
+					},
+					"name": "apiresponse"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_read_campaign_csvs",
+						"type": "DatasetReference"
+					},
+					"name": "Campaign"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Performance_parquet",
+						"type": "DatasetReference"
+					},
+					"name": "sinkToADLS"
+				},
+				{
+					"dataset": {
+						"referenceName": "Engagement_parquet",
+						"type": "DatasetReference"
+					},
+					"name": "sinkAPIToADLS"
+				}
+			],
+			"transformations": [
+				{
+					"name": "flattenArrays"
+				},
+				{
+					"name": "filterdate"
+				},
+				{
+					"name": "derivedcolupper"
+				},
+				{
+					"name": "aggregatededuplication"
+				},
+				{
+					"name": "derivedColumns"
+				},
+				{
+					"name": "aggregate"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          post_id as string,",
+				"          campaign_id as string,",
+				"          platform as string,",
+				"          post_date as date,",
+				"          impressions as long,",
+				"          reach as long,",
+				"          clicks as long,",
+				"          shares as long,",
+				"          content_type as string,",
+				"          posted_ts as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     wildcardPaths:['csvfiles/social_post_performance/*.csv']) ~> performance",
+				"source(output(",
+				"          data as (engagement_id as string, engagement_ts as timestamp, engagement_type as string, influencer_flag as boolean, post_id as string, reaction_type as string, sentiment_score as double, user_id as string)[],",
+				"          has_more as boolean,",
+				"          next_since_id as string,",
+				"          since_id as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     documentForm: 'singleDocument',",
+				"     wildcardPaths:['/api_responses/*.json']) ~> apiresponse",
+				"source(output(",
+				"          campaign_id as string,",
+				"          campaign_name as string,",
+				"          client_id as string,",
+				"          budget_usd as double,",
+				"          start_date as date,",
+				"          end_date as date,",
+				"          goal as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     wildcardPaths:['csvfiles/campaign_lookup/*.csv']) ~> Campaign",
+				"apiresponse foldDown(unroll(data, data),",
+				"     mapColumn(",
+				"          engagement_id = data.engagement_id,",
+				"          engagement_ts = data.engagement_ts,",
+				"          engagement_type = data.engagement_type,",
+				"          influencer_flag = data.influencer_flag,",
+				"          post_id = data.post_id,",
+				"          reaction_type = data.reaction_type,",
+				"          sentiment_score = data.sentiment_score,",
+				"          user_id = data.user_id",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> flattenArrays",
+				"performance filter(post_date <= currentDate() && !isNull(reach)) ~> filterdate",
+				"filterdate derive(platform = iif(isNull(platform), 'UNAVAILABLE',upper(platform)),",
+				"          clicks = iif(isNull(clicks), 0, toInteger(iif(clicks > impressions, impressions, clicks))),",
+				"          reach = iif(isNull(reach), 0, toInteger(reach)),",
+				"          campaign_id = iif(isNull(campaign_id), 'UNAVAILABLE', campaign_id)) ~> derivedcolupper",
+				"derivedcolupper aggregate(groupBy(post_id),",
+				"     campaign_id = last(campaign_id),",
+				"          platform = last(platform),",
+				"          post_date = last(post_date),",
+				"          impressions = last(impressions),",
+				"          reach = last(reach),",
+				"          clicks = last(clicks),",
+				"          shares = last(shares),",
+				"          content_type = last(content_type),",
+				"          posted_ts = last(posted_ts)) ~> aggregatededuplication",
+				"flattenArrays derive(engagement_type = upper(engagement_type),",
+				"          sentiment_score = iif(sentiment_score > 1.0 || sentiment_score < -1.0 || isNull(sentiment_score), toDecimal(0), toDecimal(sentiment_score)),",
+				"          reaction_type = coalesce(reaction_type, 'NONE'),",
+				"          user_id = coalesce(user_id, 'UNKNOWN')) ~> derivedColumns",
+				"derivedColumns aggregate(groupBy(engagement_id),",
+				"     engagement_ts = last(engagement_ts),",
+				"          engagement_type = last(engagement_type),",
+				"          influencer_flag = last(influencer_flag),",
+				"          post_id = last(post_id),",
+				"          reaction_type = last(reaction_type),",
+				"          sentiment_score = last(sentiment_score),",
+				"          user_id = last(user_id)) ~> aggregate",
+				"aggregatededuplication sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sinkToADLS",
+				"aggregate sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sinkAPIToADLS"
+			]
+		}
+	}
+}

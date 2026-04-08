@@ -1,0 +1,21 @@
+{
+	"name": "Performance_parquet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_connection",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "performance_silver.parquet",
+				"folderPath": "performance",
+				"fileSystem": "silver"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	}
+}
