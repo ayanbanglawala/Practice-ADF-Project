@@ -10,6 +10,10 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "response_@{utcNow()}.json",
+					"type": "Expression"
+				},
 				"folderPath": "api_responses",
 				"fileSystem": "bronze"
 			}

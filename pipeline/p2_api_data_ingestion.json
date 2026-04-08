@@ -9,7 +9,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@equals(variables('hasMore'), true)",
+						"value": "@equals(variables('hasMore'), false)",
 						"type": "Expression"
 					},
 					"activities": [
@@ -85,7 +85,7 @@
 							}
 						},
 						{
-							"name": "If Condition1",
+							"name": "If hasMore",
 							"type": "IfCondition",
 							"dependsOn": [
 								{
@@ -95,7 +95,29 @@
 									]
 								}
 							],
-							"userProperties": []
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@activity('API validate').output.has_more",
+									"type": "Expression"
+								},
+								"ifFalseActivities": [
+									{
+										"name": "Set hasMore",
+										"type": "SetVariable",
+										"dependsOn": [],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "hasMore",
+											"value": false
+										}
+									}
+								]
+							}
 						}
 					],
 					"timeout": "0.12:00:00"
