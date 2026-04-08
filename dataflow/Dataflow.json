@@ -65,10 +65,7 @@
 					"name": "DerivedCampaign"
 				},
 				{
-					"name": "aggregate1"
-				},
-				{
-					"name": "aggregate2"
+					"name": "aggregateCampaign"
 				}
 			],
 			"scriptLines": [
@@ -155,8 +152,12 @@
 				"Campaign derive(budget_usd = coalesce(toDecimal(budget_usd), 0.0),",
 				"          client_id = coalesce(client_id, 'UNKNOWN'),",
 				"          campaign_name = trim(campaign_name)) ~> DerivedCampaign",
-				"aggregate2 aggregate() ~> aggregate1",
-				"DerivedCampaign aggregate() ~> aggregate2",
+				"DerivedCampaign aggregate(groupBy(campaign_id),",
+				"     campaign_name = last(campaign_name),",
+				"          budget_usd = last(budget_usd),",
+				"          start_date = last(start_date),",
+				"          end_date = last(end_date),",
+				"          goal = last(goal)) ~> aggregateCampaign",
 				"aggregatededuplication sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'parquet',",
