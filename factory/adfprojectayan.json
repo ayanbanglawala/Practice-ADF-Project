@@ -1,0 +1,9 @@
+{
+	"name": "adfprojectayan",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "1a9f9ca6-4ddb-4596-8600-eb39ddd9c2d8",
+		"tenantId": "92bea702-e795-4e87-ae52-4307f4fa14b0"
+	}
+}
