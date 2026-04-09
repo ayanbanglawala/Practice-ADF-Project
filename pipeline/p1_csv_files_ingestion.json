@@ -87,12 +87,8 @@
 								},
 								"enableStaging": false,
 								"translator": {
-									"type": "TabularTranslator",
-									"typeConversion": true,
-									"typeConversionSettings": {
-										"allowDataTruncation": true,
-										"treatBooleanAsNumber": false
-									}
+									"value": "@if(\r\n    contains(item().name, 'performance'), \r\n    pipeline().parameters.performance_schema, \r\n    if(\r\n        contains(item().name, 'campaign'), \r\n        pipeline().parameters.campaign_schema, \r\n        null\r\n    )\r\n)",
+									"type": "Expression"
 								}
 							},
 							"inputs": [
@@ -117,7 +113,7 @@
 											"type": "Expression"
 										},
 										"p_filename": {
-											"value": "@if(\n    contains(item().name, 'performance'), \n    concat('social_post_performance_', formatDateTime(utcNow(), 'yyyyMMdd_HHmmss'), '.csv'), \n    if(\n        contains(item().name, 'campaign'), \n        concat('campaign_lookup_', formatDateTime(utcNow(), 'yyyyMMdd_HHmmss'), '.csv'),\n        concat('unclassified_', item().name)\n    )\n)",
+											"value": "@if(\n    contains(item().name, 'performance'), \n    concat('social_post_performance_', formatDateTime(utcNow(), 'yyyyMMdd_HHmmss'), '_', item().name), \n    if(\n        contains(item().name, 'campaign'), \n        concat('campaign_lookup_', formatDateTime(utcNow(), 'yyyyMMdd_HHmmss'), '_', item().name),\n        concat('unclassified_', item().name)\n    )\n)",
 											"type": "Expression"
 										}
 									}
@@ -170,6 +166,238 @@
 				}
 			}
 		],
+		"parameters": {
+			"campaign_schema": {
+				"type": "object",
+				"defaultValue": {
+					"type": "TabularTranslator",
+					"mappings": [
+						{
+							"source": {
+								"name": "campaign_id",
+								"type": "String",
+								"physicalType": "String"
+							},
+							"sink": {
+								"name": "campaign_id",
+								"type": "String",
+								"physicalType": "String"
+							}
+						},
+						{
+							"source": {
+								"name": "campaign_name",
+								"type": "String",
+								"physicalType": "String"
+							},
+							"sink": {
+								"name": "campaign_name",
+								"type": "String",
+								"physicalType": "String"
+							}
+						},
+						{
+							"source": {
+								"name": "client_id",
+								"type": "String",
+								"physicalType": "String"
+							},
+							"sink": {
+								"name": "client_id",
+								"type": "String",
+								"physicalType": "String"
+							}
+						},
+						{
+							"source": {
+								"name": "budget_usd",
+								"type": "String",
+								"physicalType": "String"
+							},
+							"sink": {
+								"name": "budget_usd",
+								"type": "String",
+								"physicalType": "String"
+							}
+						},
+						{
+							"source": {
+								"name": "start_date",
+								"type": "String",
+								"physicalType": "String"
+							},
+							"sink": {
+								"name": "start_date",
+								"type": "String",
+								"physicalType": "String"
+							}
+						},
+						{
+							"source": {
+								"name": "end_date",
+								"type": "String",
+								"physicalType": "String"
+							},
+							"sink": {
+								"name": "end_date",
+								"type": "String",
+								"physicalType": "String"
+							}
+						},
+						{
+							"source": {
+								"name": "goal",
+								"type": "String",
+								"physicalType": "String"
+							},
+							"sink": {
+								"name": "goal",
+								"type": "String",
+								"physicalType": "String"
+							}
+						}
+					],
+					"typeConversion": true,
+					"typeConversionSettings": {
+						"allowDataTruncation": true,
+						"treatBooleanAsNumber": false
+					}
+				}
+			},
+			"performance_schema": {
+				"type": "object",
+				"defaultValue": {
+					"type": "TabularTranslator",
+					"mappings": [
+						{
+							"source": {
+								"name": "post_id",
+								"type": "String",
+								"physicalType": "String"
+							},
+							"sink": {
+								"name": "post_id",
+								"type": "String",
+								"physicalType": "String"
+							}
+						},
+						{
+							"source": {
+								"name": "campaign_id",
+								"type": "String",
+								"physicalType": "String"
+							},
+							"sink": {
+								"name": "campaign_id",
+								"type": "String",
+								"physicalType": "String"
+							}
+						},
+						{
+							"source": {
+								"name": "platform",
+								"type": "String",
+								"physicalType": "String"
+							},
+							"sink": {
+								"name": "platform",
+								"type": "String",
+								"physicalType": "String"
+							}
+						},
+						{
+							"source": {
+								"name": "post_date",
+								"type": "String",
+								"physicalType": "String"
+							},
+							"sink": {
+								"name": "post_date",
+								"type": "String",
+								"physicalType": "String"
+							}
+						},
+						{
+							"source": {
+								"name": "impressions",
+								"type": "String",
+								"physicalType": "String"
+							},
+							"sink": {
+								"name": "impressions",
+								"type": "String",
+								"physicalType": "String"
+							}
+						},
+						{
+							"source": {
+								"name": "reach",
+								"type": "String",
+								"physicalType": "String"
+							},
+							"sink": {
+								"name": "reach",
+								"type": "String",
+								"physicalType": "String"
+							}
+						},
+						{
+							"source": {
+								"name": "clicks",
+								"type": "String",
+								"physicalType": "String"
+							},
+							"sink": {
+								"name": "clicks",
+								"type": "String",
+								"physicalType": "String"
+							}
+						},
+						{
+							"source": {
+								"name": "shares",
+								"type": "String",
+								"physicalType": "String"
+							},
+							"sink": {
+								"name": "shares",
+								"type": "String",
+								"physicalType": "String"
+							}
+						},
+						{
+							"source": {
+								"name": "content_type",
+								"type": "String",
+								"physicalType": "String"
+							},
+							"sink": {
+								"name": "content_type",
+								"type": "String",
+								"physicalType": "String"
+							}
+						},
+						{
+							"source": {
+								"name": "posted_ts",
+								"type": "String",
+								"physicalType": "String"
+							},
+							"sink": {
+								"name": "posted_ts",
+								"type": "String",
+								"physicalType": "String"
+							}
+						}
+					],
+					"typeConversion": true,
+					"typeConversionSettings": {
+						"allowDataTruncation": true,
+						"treatBooleanAsNumber": false
+					}
+				}
+			}
+		},
 		"annotations": []
 	}
 }

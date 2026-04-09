@@ -1,0 +1,54 @@
+{
+	"name": "ds_read_engagements_silver",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_connection",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileSystem": "silver"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": [
+			{
+				"name": "engagement_id",
+				"type": "UTF8"
+			},
+			{
+				"name": "engagement_ts",
+				"type": "INT96"
+			},
+			{
+				"name": "engagement_type",
+				"type": "UTF8"
+			},
+			{
+				"name": "influencer_flag",
+				"type": "BOOLEAN"
+			},
+			{
+				"name": "post_id",
+				"type": "UTF8"
+			},
+			{
+				"name": "reaction_type",
+				"type": "UTF8"
+			},
+			{
+				"name": "sentiment_score",
+				"type": "DECIMAL",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "user_id",
+				"type": "UTF8"
+			}
+		]
+	}
+}

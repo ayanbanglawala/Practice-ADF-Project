@@ -1,0 +1,68 @@
+{
+	"name": "goldDataFlow",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_read_silver_performance",
+						"type": "DatasetReference"
+					},
+					"name": "performanceSilver"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_read_campaign_silver",
+						"type": "DatasetReference"
+					},
+					"name": "campaignSilver"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_read_engagements_silver",
+						"type": "DatasetReference"
+					},
+					"name": "engagementsSilver"
+				}
+			],
+			"sinks": [],
+			"transformations": [],
+			"scriptLines": [
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet',",
+				"     wildcardPaths:['/performance/*.parquet']) ~> performanceSilver",
+				"source(output(",
+				"          campaign_id as string,",
+				"          campaign_name as string,",
+				"          budget_usd as decimal(12,2),",
+				"          start_date as date,",
+				"          end_date as date,",
+				"          goal as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet',",
+				"     wildcardPaths:['/campaign/*.parquet']) ~> campaignSilver",
+				"source(output(",
+				"          engagement_id as string,",
+				"          engagement_ts as timestamp,",
+				"          engagement_type as string,",
+				"          influencer_flag as boolean,",
+				"          post_id as string,",
+				"          reaction_type as string,",
+				"          sentiment_score as decimal(10,2),",
+				"          user_id as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet',",
+				"     wildcardPaths:['Engagements/*.parquet']) ~> engagementsSilver"
+			]
+		}
+	}
+}
