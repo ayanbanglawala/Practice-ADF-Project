@@ -6,98 +6,12 @@
 			"type": "string",
 			"metadata": "Data Factory name",
 			"defaultValue": "adfprojectayan"
-		},
-		"ls_adls_connection_accountKey": {
-			"type": "secureString",
-			"metadata": "Secure string for 'accountKey' of 'ls_adls_connection'"
-		},
-		"ls_sql_connection_password": {
-			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'ls_sql_connection'"
-		},
-		"ls_adls_connection_properties_typeProperties_url": {
-			"type": "string",
-			"defaultValue": "https://storageprojectayan.dfs.core.windows.net/"
-		},
-		"ls_api_connection_properties_typeProperties_url": {
-			"type": "string",
-			"defaultValue": "https://mocki.io"
-		},
-		"ls_sql_connection_properties_typeProperties_server": {
-			"type": "string",
-			"defaultValue": "sqlserverayan.database.windows.net"
-		},
-		"ls_sql_connection_properties_typeProperties_database": {
-			"type": "string",
-			"defaultValue": "sqldbayan"
-		},
-		"ls_sql_connection_properties_typeProperties_userName": {
-			"type": "string",
-			"defaultValue": "ayan"
 		}
 	},
 	"variables": {
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
-		{
-			"name": "[concat(parameters('factoryName'), '/Combined_p1_p3')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Execute CSV Ingestion",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "p1_csv_files_ingestion",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					},
-					{
-						"name": "Execute Data Flow",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "Execute CSV Ingestion",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "p3_silver_datacleaning",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/p1_csv_files_ingestion')]",
-				"[concat(variables('factoryId'), '/pipelines/p3_silver_datacleaning')]"
-			]
-		},
 		{
 			"name": "[concat(parameters('factoryName'), '/p1_csv_files_ingestion')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
@@ -506,70 +420,7 @@
 				},
 				"annotations": []
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/ds_all_files_names')]",
-				"[concat(variables('factoryId'), '/datasets/ds_adls_allfiles_source')]",
-				"[concat(variables('factoryId'), '/datasets/ds_csvfiles_to_bronze_dest')]",
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls_connection')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/p1_p2_pipeline_Exe')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Execute p1",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "p1_csv_files_ingestion",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					},
-					{
-						"name": "Execute p2",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "Execute p1",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "p2_api_data_ingestion",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/p1_csv_files_ingestion')]",
-				"[concat(variables('factoryId'), '/pipelines/p2_api_data_ingestion')]"
-			]
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/p2_api_data_ingestion')]",
@@ -712,745 +563,6 @@
 					}
 				},
 				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/ds_api_source')]",
-				"[concat(variables('factoryId'), '/datasets/ds_api_to_adls_dest')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/p3_silver_datacleaning')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Data Cleaning",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "Dataflow",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"performance": {},
-									"apiresponse": {},
-									"Campaign": {},
-									"sinkToADLS": {},
-									"sinkAPIToADLS": {},
-									"sinkCampaign": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/Dataflow')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/p4_join_OBD_and_dim')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Gold Data Flow",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "goldDataFlow",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"performanceSilver": {},
-									"campaignSilver": {},
-									"engagementsSilver": {},
-									"goldp5campaignroi": {},
-									"sinkgoldp5contentperformance": {},
-									"goldp5influencerreachreport": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/goldDataFlow')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Campaign_Parquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_adls_connection",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": "campaign_silver.parquet",
-						"folderPath": "campaign",
-						"fileSystem": "silver"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls_connection')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Engagement_parquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_adls_connection",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": "engagements_silver.parquet",
-						"folderPath": "Engagements",
-						"fileSystem": "silver"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls_connection')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Performance_parquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_adls_connection",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": "performance_silver.parquet",
-						"folderPath": "performance",
-						"fileSystem": "silver"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls_connection')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_adls_allfiles_source')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_adls_connection",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"p_filename": {
-						"type": "string"
-					}
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "@dataset().p_filename",
-							"type": "Expression"
-						},
-						"folderPath": "csvfiles",
-						"fileSystem": "load"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls_connection')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_all_files_names')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_adls_connection",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"folderPath": "csvfiles",
-						"fileSystem": "load"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls_connection')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_api_source')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_api_connection",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Json",
-				"typeProperties": {
-					"location": {
-						"type": "HttpServerLocation",
-						"relativeUrl": "v1/410bc703-7c36-4382-9ba1-1d8e6a33f2ff"
-					}
-				},
-				"schema": {}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_api_connection')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_api_to_adls_dest')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_adls_connection",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Json",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "response_@{utcNow()}.json",
-							"type": "Expression"
-						},
-						"folderPath": "api_responses",
-						"fileSystem": "bronze"
-					}
-				},
-				"schema": {}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls_connection')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_csvfiles_to_bronze_dest')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_adls_connection",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"p_folder_name": {
-						"type": "string"
-					},
-					"p_filename": {
-						"type": "string"
-					}
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": {
-							"value": "@dataset().p_filename",
-							"type": "Expression"
-						},
-						"folderPath": {
-							"value": "csvfiles/@{dataset().p_folder_name}",
-							"type": "Expression"
-						},
-						"fileSystem": "bronze"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls_connection')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_read_api_jsons')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_adls_connection",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Json",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileSystem": "bronze"
-					}
-				},
-				"schema": {
-					"type": "object",
-					"properties": {
-						"since_id": {
-							"type": "string"
-						},
-						"next_since_id": {
-							"type": "string"
-						},
-						"has_more": {
-							"type": "boolean"
-						},
-						"data": {
-							"type": "array",
-							"items": {
-								"type": "object",
-								"properties": {
-									"engagement_id": {
-										"type": "string"
-									},
-									"post_id": {
-										"type": "string"
-									},
-									"user_id": {
-										"type": "string"
-									},
-									"engagement_type": {
-										"type": "string"
-									},
-									"reaction_type": {
-										"type": "string"
-									},
-									"engagement_ts": {
-										"type": "string"
-									},
-									"sentiment_score": {
-										"type": "number"
-									},
-									"influencer_flag": {
-										"type": "boolean"
-									}
-								}
-							}
-						}
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls_connection')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_read_campaign_csvs')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_adls_connection",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileSystem": "bronze"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": [
-					{
-						"name": "campaign_id",
-						"type": "String"
-					},
-					{
-						"name": "campaign_name",
-						"type": "String"
-					},
-					{
-						"name": "client_id",
-						"type": "String"
-					},
-					{
-						"name": "budget_usd",
-						"type": "String"
-					},
-					{
-						"name": "start_date",
-						"type": "String"
-					},
-					{
-						"name": "end_date",
-						"type": "String"
-					},
-					{
-						"name": "goal",
-						"type": "String"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls_connection')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_read_campaign_silver')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_adls_connection",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileSystem": "silver"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": [
-					{
-						"name": "campaign_id",
-						"type": "UTF8"
-					},
-					{
-						"name": "campaign_name",
-						"type": "UTF8"
-					},
-					{
-						"name": "budget_usd",
-						"type": "DECIMAL",
-						"precision": 12,
-						"scale": 2
-					},
-					{
-						"name": "start_date",
-						"type": "DATE"
-					},
-					{
-						"name": "end_date",
-						"type": "DATE"
-					},
-					{
-						"name": "goal",
-						"type": "UTF8"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls_connection')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_read_engagements_silver')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_adls_connection",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileSystem": "silver"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": [
-					{
-						"name": "engagement_id",
-						"type": "UTF8"
-					},
-					{
-						"name": "engagement_ts",
-						"type": "UTF8"
-					},
-					{
-						"name": "engagement_type",
-						"type": "UTF8"
-					},
-					{
-						"name": "influencer_flag",
-						"type": "BOOLEAN"
-					},
-					{
-						"name": "post_id",
-						"type": "UTF8"
-					},
-					{
-						"name": "reaction_type",
-						"type": "UTF8"
-					},
-					{
-						"name": "sentiment_score",
-						"type": "DECIMAL",
-						"precision": 10,
-						"scale": 2
-					},
-					{
-						"name": "user_id",
-						"type": "UTF8"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls_connection')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_read_performance_csvs')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_adls_connection",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileSystem": "bronze"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": [
-					{
-						"name": "post_id",
-						"type": "String"
-					},
-					{
-						"name": "campaign_id",
-						"type": "String"
-					},
-					{
-						"name": "platform",
-						"type": "String"
-					},
-					{
-						"name": "post_date",
-						"type": "String"
-					},
-					{
-						"name": "impressions",
-						"type": "String"
-					},
-					{
-						"name": "reach",
-						"type": "String"
-					},
-					{
-						"name": "clicks",
-						"type": "String"
-					},
-					{
-						"name": "shares",
-						"type": "String"
-					},
-					{
-						"name": "content_type",
-						"type": "String"
-					},
-					{
-						"name": "posted_ts",
-						"type": "String"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls_connection')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_read_silver_performance')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_adls_connection",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileSystem": "silver"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": [
-					{
-						"name": "post_id",
-						"type": "UTF8"
-					},
-					{
-						"name": "campaign_id",
-						"type": "UTF8"
-					},
-					{
-						"name": "platform",
-						"type": "UTF8"
-					},
-					{
-						"name": "post_date",
-						"type": "DATE"
-					},
-					{
-						"name": "impressions",
-						"type": "INT64"
-					},
-					{
-						"name": "reach",
-						"type": "INT32"
-					},
-					{
-						"name": "clicks",
-						"type": "INT32"
-					},
-					{
-						"name": "shares",
-						"type": "INT64"
-					},
-					{
-						"name": "content_type",
-						"type": "UTF8"
-					},
-					{
-						"name": "posted_ts",
-						"type": "INT96"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls_connection')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ls_adls_connection')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureBlobFS",
-				"typeProperties": {
-					"url": "[parameters('ls_adls_connection_properties_typeProperties_url')]",
-					"accountKey": {
-						"type": "SecureString",
-						"value": "[parameters('ls_adls_connection_accountKey')]"
-					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ls_api_connection')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "HttpServer",
-				"typeProperties": {
-					"url": "[parameters('ls_api_connection_properties_typeProperties_url')]",
-					"enableServerCertificateValidation": true,
-					"authenticationType": "Anonymous"
-				}
 			},
 			"dependsOn": []
 		},
@@ -1650,99 +762,7 @@
 					]
 				}
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/ds_read_performance_csvs')]",
-				"[concat(variables('factoryId'), '/datasets/ds_read_api_jsons')]",
-				"[concat(variables('factoryId'), '/datasets/ds_read_campaign_csvs')]",
-				"[concat(variables('factoryId'), '/datasets/Performance_parquet')]",
-				"[concat(variables('factoryId'), '/datasets/Engagement_parquet')]",
-				"[concat(variables('factoryId'), '/datasets/Campaign_Parquet')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ls_sql_connection')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureSqlDatabase",
-				"typeProperties": {
-					"server": "[parameters('ls_sql_connection_properties_typeProperties_server')]",
-					"database": "[parameters('ls_sql_connection_properties_typeProperties_database')]",
-					"encrypt": "mandatory",
-					"trustServerCertificate": false,
-					"authenticationType": "SQL",
-					"userName": "[parameters('ls_sql_connection_properties_typeProperties_userName')]",
-					"password": {
-						"type": "SecureString",
-						"value": "[parameters('ls_sql_connection_password')]"
-					}
-				}
-			},
 			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_gold_p5_campaign_roi_summary')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_sql_connection",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": "dbo",
-					"table": "gold_p5_campaign_roi_summary"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_sql_connection')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_gold_p5_content_performance')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_sql_connection",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": "dbo",
-					"table": "gold_p5_content_performance"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_sql_connection')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_gold_p5_influencer_reach_report')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_sql_connection",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": "dbo",
-					"table": "gold_p5_influencer_reach_report"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_sql_connection')]"
-			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/goldDataFlow')]",
@@ -1977,13 +997,222 @@
 					]
 				}
 			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/p1_p2_pipeline_Exe')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Execute p1",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "p1_csv_files_ingestion",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Execute p2",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Execute p1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "p2_api_data_ingestion",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/ds_read_silver_performance')]",
-				"[concat(variables('factoryId'), '/datasets/ds_read_campaign_silver')]",
-				"[concat(variables('factoryId'), '/datasets/ds_read_engagements_silver')]",
-				"[concat(variables('factoryId'), '/datasets/ds_gold_p5_campaign_roi_summary')]",
-				"[concat(variables('factoryId'), '/datasets/ds_gold_p5_content_performance')]",
-				"[concat(variables('factoryId'), '/datasets/ds_gold_p5_influencer_reach_report')]"
+				"[concat(variables('factoryId'), '/pipelines/p1_csv_files_ingestion')]",
+				"[concat(variables('factoryId'), '/pipelines/p2_api_data_ingestion')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/p3_silver_datacleaning')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Data Cleaning",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "Dataflow",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"performance": {},
+									"apiresponse": {},
+									"Campaign": {},
+									"sinkToADLS": {},
+									"sinkAPIToADLS": {},
+									"sinkCampaign": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/Dataflow')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/p4_join_OBD_and_dim')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Gold Data Flow",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "goldDataFlow",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"performanceSilver": {},
+									"campaignSilver": {},
+									"engagementsSilver": {},
+									"goldp5campaignroi": {},
+									"sinkgoldp5contentperformance": {},
+									"goldp5influencerreachreport": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/goldDataFlow')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Combined_p1_p3')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Execute CSV Ingestion",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "p1_csv_files_ingestion",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Execute Data Flow",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Execute CSV Ingestion",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "p3_silver_datacleaning",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/p1_csv_files_ingestion')]",
+				"[concat(variables('factoryId'), '/pipelines/p3_silver_datacleaning')]"
 			]
 		}
 	]

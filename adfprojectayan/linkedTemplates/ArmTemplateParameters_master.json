@@ -8,11 +8,23 @@
 		"ls_adls_connection_accountKey": {
 			"value": ""
 		},
+		"ls_sql_connection_password": {
+			"value": ""
+		},
 		"ls_adls_connection_properties_typeProperties_url": {
 			"value": "https://storageprojectayan.dfs.core.windows.net/"
 		},
 		"ls_api_connection_properties_typeProperties_url": {
 			"value": "https://mocki.io"
+		},
+		"ls_sql_connection_properties_typeProperties_server": {
+			"value": "sqlserverayan.database.windows.net"
+		},
+		"ls_sql_connection_properties_typeProperties_database": {
+			"value": "sqldbayan"
+		},
+		"ls_sql_connection_properties_typeProperties_userName": {
+			"value": "ayan"
 		},
 		"containerUri": {
 			"value": ""

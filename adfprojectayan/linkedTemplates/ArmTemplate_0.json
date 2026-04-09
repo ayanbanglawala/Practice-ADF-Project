@@ -11,6 +11,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'accountKey' of 'ls_adls_connection'"
 		},
+		"ls_sql_connection_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'ls_sql_connection'"
+		},
 		"ls_adls_connection_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://storageprojectayan.dfs.core.windows.net/"
@@ -18,6 +22,18 @@
 		"ls_api_connection_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://mocki.io"
+		},
+		"ls_sql_connection_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "sqlserverayan.database.windows.net"
+		},
+		"ls_sql_connection_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "sqldbayan"
+		},
+		"ls_sql_connection_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "ayan"
 		}
 	},
 	"variables": {
@@ -55,6 +71,54 @@
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_sql_connection')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('ls_sql_connection_properties_typeProperties_server')]",
+					"database": "[parameters('ls_sql_connection_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('ls_sql_connection_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('ls_sql_connection_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Campaign_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls_connection",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "campaign_silver.parquet",
+						"folderPath": "campaign",
+						"fileSystem": "silver"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls_connection')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/Engagement_parquet')]",
@@ -284,7 +348,52 @@
 						"fileSystem": "bronze"
 					}
 				},
-				"schema": {}
+				"schema": {
+					"type": "object",
+					"properties": {
+						"since_id": {
+							"type": "string"
+						},
+						"next_since_id": {
+							"type": "string"
+						},
+						"has_more": {
+							"type": "boolean"
+						},
+						"data": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"engagement_id": {
+										"type": "string"
+									},
+									"post_id": {
+										"type": "string"
+									},
+									"user_id": {
+										"type": "string"
+									},
+									"engagement_type": {
+										"type": "string"
+									},
+									"reaction_type": {
+										"type": "string"
+									},
+									"engagement_ts": {
+										"type": "string"
+									},
+									"sentiment_score": {
+										"type": "number"
+									},
+									"influencer_flag": {
+										"type": "boolean"
+									}
+								}
+							}
+						}
+					}
+				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/ls_adls_connection')]"
@@ -311,7 +420,146 @@
 					"firstRowAsHeader": true,
 					"quoteChar": "\""
 				},
-				"schema": []
+				"schema": [
+					{
+						"name": "campaign_id",
+						"type": "String"
+					},
+					{
+						"name": "campaign_name",
+						"type": "String"
+					},
+					{
+						"name": "client_id",
+						"type": "String"
+					},
+					{
+						"name": "budget_usd",
+						"type": "String"
+					},
+					{
+						"name": "start_date",
+						"type": "String"
+					},
+					{
+						"name": "end_date",
+						"type": "String"
+					},
+					{
+						"name": "goal",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls_connection')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_read_campaign_silver')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls_connection",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "silver"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
+					{
+						"name": "campaign_id",
+						"type": "UTF8"
+					},
+					{
+						"name": "campaign_name",
+						"type": "UTF8"
+					},
+					{
+						"name": "budget_usd",
+						"type": "DECIMAL",
+						"precision": 12,
+						"scale": 2
+					},
+					{
+						"name": "start_date",
+						"type": "DATE"
+					},
+					{
+						"name": "end_date",
+						"type": "DATE"
+					},
+					{
+						"name": "goal",
+						"type": "UTF8"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls_connection')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_read_engagements_silver')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls_connection",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "silver"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
+					{
+						"name": "engagement_id",
+						"type": "UTF8"
+					},
+					{
+						"name": "engagement_ts",
+						"type": "UTF8"
+					},
+					{
+						"name": "engagement_type",
+						"type": "UTF8"
+					},
+					{
+						"name": "influencer_flag",
+						"type": "BOOLEAN"
+					},
+					{
+						"name": "post_id",
+						"type": "UTF8"
+					},
+					{
+						"name": "reaction_type",
+						"type": "UTF8"
+					},
+					{
+						"name": "sentiment_score",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "user_id",
+						"type": "UTF8"
+					}
+				]
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/ls_adls_connection')]"
@@ -386,633 +634,131 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/p1_csv_files_ingestion')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
+			"name": "[concat(parameters('factoryName'), '/ds_read_silver_performance')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"activities": [
+				"linkedServiceName": {
+					"referenceName": "ls_adls_connection",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "silver"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
 					{
-						"name": "ADLS Files names",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "ds_all_files_names",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false
-							},
-							"formatSettings": {
-								"type": "DelimitedTextReadSettings"
-							}
-						}
+						"name": "post_id",
+						"type": "UTF8"
 					},
 					{
-						"name": "Iterate childs",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "ADLS Files names",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('ADLS Files names').output.childItems",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "Copy file to bronze",
-									"type": "Copy",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "DelimitedTextSource",
-											"storeSettings": {
-												"type": "AzureBlobFSReadSettings",
-												"recursive": true,
-												"enablePartitionDiscovery": false
-											},
-											"formatSettings": {
-												"type": "DelimitedTextReadSettings"
-											}
-										},
-										"sink": {
-											"type": "DelimitedTextSink",
-											"storeSettings": {
-												"type": "AzureBlobFSWriteSettings"
-											},
-											"formatSettings": {
-												"type": "DelimitedTextWriteSettings",
-												"quoteAllText": true,
-												"fileExtension": ".txt"
-											}
-										},
-										"enableStaging": false,
-										"translator": {
-											"type": "TabularTranslator",
-											"typeConversion": true,
-											"typeConversionSettings": {
-												"allowDataTruncation": true,
-												"treatBooleanAsNumber": false
-											}
-										}
-									},
-									"inputs": [
-										{
-											"referenceName": "ds_adls_allfiles_source",
-											"type": "DatasetReference",
-											"parameters": {
-												"p_filename": {
-													"value": "@item().name",
-													"type": "Expression"
-												}
-											}
-										}
-									],
-									"outputs": [
-										{
-											"referenceName": "ds_csvfiles_to_bronze_dest",
-											"type": "DatasetReference",
-											"parameters": {
-												"p_folder_name": {
-													"value": "@if(\n    contains(item().name, 'performance'), \n    'social_post_performance', \n    if(\n        contains(item().name, 'campaign'), \n        'campaign_lookup',\n        'unclassified_data'\n    )\n)",
-													"type": "Expression"
-												},
-												"p_filename": {
-													"value": "@if(\n    contains(item().name, 'performance'), \n    concat('social_post_performance_', formatDateTime(utcNow(), 'yyyyMMdd_HHmmss'), '.csv'), \n    if(\n        contains(item().name, 'campaign'), \n        concat('campaign_lookup_', formatDateTime(utcNow(), 'yyyyMMdd_HHmmss'), '.csv'),\n        concat('unclassified_', item().name)\n    )\n)",
-													"type": "Expression"
-												}
-											}
-										}
-									]
-								},
-								{
-									"name": "Delete file after ingestion",
-									"type": "Delete",
-									"dependsOn": [
-										{
-											"activity": "Copy file to bronze",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataset": {
-											"referenceName": "ds_adls_allfiles_source",
-											"type": "DatasetReference",
-											"parameters": {
-												"p_filename": "@item().name"
-											}
-										},
-										"logStorageSettings": {
-											"linkedServiceName": {
-												"referenceName": "ls_adls_connection",
-												"type": "LinkedServiceReference"
-											},
-											"path": "load/deletelogs"
-										},
-										"enableLogging": true,
-										"storeSettings": {
-											"type": "AzureBlobFSReadSettings",
-											"recursive": true,
-											"enablePartitionDiscovery": false
-										}
-									}
-								}
-							]
-						}
+						"name": "campaign_id",
+						"type": "UTF8"
+					},
+					{
+						"name": "platform",
+						"type": "UTF8"
+					},
+					{
+						"name": "post_date",
+						"type": "DATE"
+					},
+					{
+						"name": "impressions",
+						"type": "INT64"
+					},
+					{
+						"name": "reach",
+						"type": "INT32"
+					},
+					{
+						"name": "clicks",
+						"type": "INT32"
+					},
+					{
+						"name": "shares",
+						"type": "INT64"
+					},
+					{
+						"name": "content_type",
+						"type": "UTF8"
+					},
+					{
+						"name": "posted_ts",
+						"type": "INT96"
 					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": []
+				]
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/ds_all_files_names')]",
-				"[concat(variables('factoryId'), '/datasets/ds_adls_allfiles_source')]",
-				"[concat(variables('factoryId'), '/datasets/ds_csvfiles_to_bronze_dest')]",
 				"[concat(variables('factoryId'), '/linkedServices/ls_adls_connection')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/p2_api_data_ingestion')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
+			"name": "[concat(parameters('factoryName'), '/ds_gold_p5_campaign_roi_summary')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"activities": [
-					{
-						"name": "Until hasMore",
-						"type": "Until",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@equals(variables('hasMore'), false)",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "Copy API Data",
-									"type": "Copy",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "JsonSource",
-											"storeSettings": {
-												"type": "HttpReadSettings",
-												"requestMethod": "GET"
-											},
-											"formatSettings": {
-												"type": "JsonReadSettings"
-											}
-										},
-										"sink": {
-											"type": "JsonSink",
-											"storeSettings": {
-												"type": "AzureBlobFSWriteSettings"
-											},
-											"formatSettings": {
-												"type": "JsonWriteSettings"
-											}
-										},
-										"enableStaging": false
-									},
-									"inputs": [
-										{
-											"referenceName": "ds_api_source",
-											"type": "DatasetReference",
-											"parameters": {}
-										}
-									],
-									"outputs": [
-										{
-											"referenceName": "ds_api_to_adls_dest",
-											"type": "DatasetReference",
-											"parameters": {}
-										}
-									]
-								},
-								{
-									"name": "API validate",
-									"type": "WebActivity",
-									"dependsOn": [
-										{
-											"activity": "Copy API Data",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"method": "GET",
-										"headers": {},
-										"url": "https://mocki.io/v1/410bc703-7c36-4382-9ba1-1d8e6a33f2ff"
-									}
-								},
-								{
-									"name": "If hasMore",
-									"type": "IfCondition",
-									"dependsOn": [
-										{
-											"activity": "API validate",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"userProperties": [],
-									"typeProperties": {
-										"expression": {
-											"value": "@activity('API validate').output.has_more",
-											"type": "Expression"
-										},
-										"ifFalseActivities": [
-											{
-												"name": "Set hasMore",
-												"type": "SetVariable",
-												"dependsOn": [],
-												"policy": {
-													"secureOutput": false,
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"variableName": "hasMore",
-													"value": false
-												}
-											}
-										]
-									}
-								}
-							],
-							"timeout": "0.12:00:00"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
+				"linkedServiceName": {
+					"referenceName": "ls_sql_connection",
+					"type": "LinkedServiceReference"
 				},
-				"variables": {
-					"hasMore": {
-						"type": "Boolean",
-						"defaultValue": true
-					}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/ds_api_source')]",
-				"[concat(variables('factoryId'), '/datasets/ds_api_to_adls_dest')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Dataflow')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "MappingDataFlow",
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
 				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "ds_read_performance_csvs",
-								"type": "DatasetReference"
-							},
-							"name": "performance"
-						},
-						{
-							"dataset": {
-								"referenceName": "ds_read_api_jsons",
-								"type": "DatasetReference"
-							},
-							"name": "apiresponse"
-						},
-						{
-							"dataset": {
-								"referenceName": "ds_read_campaign_csvs",
-								"type": "DatasetReference"
-							},
-							"name": "Campaign"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "Performance_parquet",
-								"type": "DatasetReference"
-							},
-							"name": "sinkToADLS"
-						},
-						{
-							"dataset": {
-								"referenceName": "Engagement_parquet",
-								"type": "DatasetReference"
-							},
-							"name": "sinkAPIToADLS"
-						}
-					],
-					"transformations": [
-						{
-							"name": "flattenArrays"
-						},
-						{
-							"name": "filterdate"
-						},
-						{
-							"name": "derivedcolupper"
-						},
-						{
-							"name": "aggregatededuplication"
-						},
-						{
-							"name": "derivedColumns"
-						},
-						{
-							"name": "aggregate"
-						},
-						{
-							"name": "DerivedCampaign"
-						},
-						{
-							"name": "aggregateCampaign"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          post_id as string,",
-						"          campaign_id as string,",
-						"          platform as string,",
-						"          post_date as date,",
-						"          impressions as long,",
-						"          reach as long,",
-						"          clicks as long,",
-						"          shares as long,",
-						"          content_type as string,",
-						"          posted_ts as timestamp",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false,",
-						"     wildcardPaths:['csvfiles/social_post_performance/*.csv']) ~> performance",
-						"source(output(",
-						"          data as (engagement_id as string, engagement_ts as timestamp, engagement_type as string, influencer_flag as boolean, post_id as string, reaction_type as string, sentiment_score as double, user_id as string)[],",
-						"          has_more as boolean,",
-						"          next_since_id as string,",
-						"          since_id as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false,",
-						"     documentForm: 'singleDocument',",
-						"     wildcardPaths:['/api_responses/*.json']) ~> apiresponse",
-						"source(output(",
-						"          campaign_id as string,",
-						"          campaign_name as string,",
-						"          client_id as string,",
-						"          budget_usd as double,",
-						"          start_date as date,",
-						"          end_date as date,",
-						"          goal as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false,",
-						"     wildcardPaths:['csvfiles/campaign_lookup/*.csv']) ~> Campaign",
-						"apiresponse foldDown(unroll(data, data),",
-						"     mapColumn(",
-						"          engagement_id = data.engagement_id,",
-						"          engagement_ts = data.engagement_ts,",
-						"          engagement_type = data.engagement_type,",
-						"          influencer_flag = data.influencer_flag,",
-						"          post_id = data.post_id,",
-						"          reaction_type = data.reaction_type,",
-						"          sentiment_score = data.sentiment_score,",
-						"          user_id = data.user_id",
-						"     ),",
-						"     skipDuplicateMapInputs: false,",
-						"     skipDuplicateMapOutputs: false) ~> flattenArrays",
-						"performance filter(post_date <= currentDate() && !isNull(reach)) ~> filterdate",
-						"filterdate derive(platform = iif(isNull(platform), 'UNAVAILABLE',upper(platform)),",
-						"          clicks = iif(isNull(clicks), 0, toInteger(iif(clicks > impressions, impressions, clicks))),",
-						"          reach = iif(isNull(reach), 0, toInteger(reach)),",
-						"          campaign_id = iif(isNull(campaign_id), 'UNAVAILABLE', campaign_id)) ~> derivedcolupper",
-						"derivedcolupper aggregate(groupBy(post_id),",
-						"     campaign_id = last(campaign_id),",
-						"          platform = last(platform),",
-						"          post_date = last(post_date),",
-						"          impressions = last(impressions),",
-						"          reach = last(reach),",
-						"          clicks = last(clicks),",
-						"          shares = last(shares),",
-						"          content_type = last(content_type),",
-						"          posted_ts = last(posted_ts)) ~> aggregatededuplication",
-						"flattenArrays derive(engagement_type = upper(engagement_type),",
-						"          sentiment_score = iif(sentiment_score > 1.0 || sentiment_score < -1.0 || isNull(sentiment_score), toDecimal(0), toDecimal(sentiment_score)),",
-						"          reaction_type = coalesce(reaction_type, 'NONE'),",
-						"          user_id = coalesce(user_id, 'UNKNOWN')) ~> derivedColumns",
-						"derivedColumns aggregate(groupBy(engagement_id),",
-						"     engagement_ts = last(engagement_ts),",
-						"          engagement_type = last(engagement_type),",
-						"          influencer_flag = last(influencer_flag),",
-						"          post_id = last(post_id),",
-						"          reaction_type = last(reaction_type),",
-						"          sentiment_score = last(sentiment_score),",
-						"          user_id = last(user_id)) ~> aggregate",
-						"Campaign derive(budget_usd = coalesce(toDecimal(budget_usd), 0.0),",
-						"          client_id = coalesce(client_id, 'UNKNOWN'),",
-						"          campaign_name = trim(campaign_name)) ~> DerivedCampaign",
-						"DerivedCampaign aggregate(groupBy(campaign_id),",
-						"     campaign_name = last(campaign_name),",
-						"          budget_usd = last(budget_usd),",
-						"          start_date = last(start_date),",
-						"          end_date = last(end_date),",
-						"          goal = last(goal)) ~> aggregateCampaign",
-						"aggregatededuplication sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'parquet',",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> sinkToADLS",
-						"aggregate sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'parquet',",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> sinkAPIToADLS"
-					]
+					"schema": "dbo",
+					"table": "gold_p5_campaign_roi_summary"
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/ds_read_performance_csvs')]",
-				"[concat(variables('factoryId'), '/datasets/ds_read_api_jsons')]",
-				"[concat(variables('factoryId'), '/datasets/ds_read_campaign_csvs')]",
-				"[concat(variables('factoryId'), '/datasets/Performance_parquet')]",
-				"[concat(variables('factoryId'), '/datasets/Engagement_parquet')]"
+				"[concat(variables('factoryId'), '/linkedServices/ls_sql_connection')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/p1_p2_pipeline_Exe')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
+			"name": "[concat(parameters('factoryName'), '/ds_gold_p5_content_performance')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"activities": [
-					{
-						"name": "Execute p1",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "p1_csv_files_ingestion",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					},
-					{
-						"name": "Execute p2",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "Execute p1",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "p2_api_data_ingestion",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
+				"linkedServiceName": {
+					"referenceName": "ls_sql_connection",
+					"type": "LinkedServiceReference"
 				},
-				"annotations": []
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "gold_p5_content_performance"
+				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/p1_csv_files_ingestion')]",
-				"[concat(variables('factoryId'), '/pipelines/p2_api_data_ingestion')]"
+				"[concat(variables('factoryId'), '/linkedServices/ls_sql_connection')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/p3_silver_datacleaning')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
+			"name": "[concat(parameters('factoryName'), '/ds_gold_p5_influencer_reach_report')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"activities": [
-					{
-						"name": "Data Cleaning",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "Dataflow",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"performance": {},
-									"apiresponse": {},
-									"Campaign": {},
-									"sinkToADLS": {},
-									"sinkAPIToADLS": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
+				"linkedServiceName": {
+					"referenceName": "ls_sql_connection",
+					"type": "LinkedServiceReference"
 				},
-				"annotations": []
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "gold_p5_influencer_reach_report"
+				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/Dataflow')]"
+				"[concat(variables('factoryId'), '/linkedServices/ls_sql_connection')]"
 			]
 		}
 	]
