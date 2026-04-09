@@ -21,7 +21,7 @@
 			},
 			{
 				"name": "engagement_ts",
-				"type": "INT96"
+				"type": "UTF8"
 			},
 			{
 				"name": "engagement_type",

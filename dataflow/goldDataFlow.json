@@ -26,10 +26,72 @@
 					"name": "engagementsSilver"
 				}
 			],
-			"sinks": [],
-			"transformations": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_gold_p5_campaign_roi_summary",
+						"type": "DatasetReference"
+					},
+					"name": "goldp5campaignroi"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_gold_p5_content_performance",
+						"type": "DatasetReference"
+					},
+					"name": "sinkgoldp5contentperformance"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_gold_p5_influencer_reach_report",
+						"type": "DatasetReference"
+					},
+					"name": "goldp5influencerreachreport"
+				}
+			],
+			"transformations": [
+				{
+					"name": "aggEngagements"
+				},
+				{
+					"name": "joinPerfEng"
+				},
+				{
+					"name": "joinCampaign"
+				},
+				{
+					"name": "derivedKPIs"
+				},
+				{
+					"name": "aggROI"
+				},
+				{
+					"name": "derivedROI"
+				},
+				{
+					"name": "aggContent"
+				},
+				{
+					"name": "aggInfluencer"
+				},
+				{
+					"name": "aggInfluencer1"
+				}
+			],
 			"scriptLines": [
-				"source(allowSchemaDrift: true,",
+				"source(output(",
+				"          post_id as string,",
+				"          campaign_id as string,",
+				"          platform as string,",
+				"          post_date as date,",
+				"          impressions as long,",
+				"          reach as integer,",
+				"          clicks as integer,",
+				"          shares as long,",
+				"          content_type as string,",
+				"          posted_ts as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
 				"     format: 'parquet',",
@@ -49,7 +111,7 @@
 				"     wildcardPaths:['campaign/*.parquet']) ~> campaignSilver",
 				"source(output(",
 				"          engagement_id as string,",
-				"          engagement_ts as timestamp,",
+				"          engagement_ts as string,",
 				"          engagement_type as string,",
 				"          influencer_flag as boolean,",
 				"          post_id as string,",
@@ -61,7 +123,83 @@
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
 				"     format: 'parquet',",
-				"     wildcardPaths:['Engagements/*.parquet']) ~> engagementsSilver"
+				"     wildcardPaths:['Engagements/*.parquet']) ~> engagementsSilver",
+				"engagementsSilver aggregate(groupBy(post_id),",
+				"     total_engagements = count(engagement_id),",
+				"          influencer_engagements = sum(iif(influencer_flag == true(), 1, 0)),",
+				"          avg_sentiment_score = avg(toDecimal(sentiment_score, 10, 4))) ~> aggEngagements",
+				"performanceSilver, aggEngagements join(performanceSilver@post_id == aggEngagements@post_id,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> joinPerfEng",
+				"joinPerfEng, campaignSilver join(performanceSilver@campaign_id == campaignSilver@campaign_id,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> joinCampaign",
+				"joinCampaign derive(report_month = left(toString(post_date), 7),",
+				"          safe_engagements = coalesce(total_engagements, 0L),",
+				"          safe_influencer = coalesce(influencer_engagements, 0L),",
+				"          safe_budget = coalesce(budget_usd, toDecimal(0,18,2)),",
+				"          safe_sentiment = coalesce(avg_sentiment_score, toDecimal(0,10,4)),",
+				"          engagement_rate = toDecimal((coalesce(total_engagements,0L)*100) / iif(impressions>0, toLong(impressions), toLong(1)), 10, 4)) ~> derivedKPIs",
+				"derivedKPIs aggregate(groupBy(report_month,",
+				"          performanceSilver@campaign_id,",
+				"          campaign_name,",
+				"          safe_budget),",
+				"     total_impressions = sum(impressions),",
+				"          total_reach = sum(toLong(reach)),",
+				"          total_clicks = sum(toLong(clicks)),",
+				"          total_shares = sum(shares)) ~> aggROI",
+				"aggROI derive(ctr_pct = toDecimal((total_clicks*100) / iif(total_impressions>0, total_impressions, toLong(1)), 10, 4),",
+				"          cost_per_click = iif(total_clicks>0, toDecimal(safe_budget / toDecimal(total_clicks,18,2), 10, 4), toDecimal(0,10,4))) ~> derivedROI",
+				"derivedKPIs aggregate(groupBy(post_date,",
+				"          platform,",
+				"          content_type),",
+				"     total_posts = count(performanceSilver@post_id),",
+				"          total_impressions = sum(impressions),",
+				"          avg_engagement_rate = avg(engagement_rate),",
+				"          total_shares = sum(shares)) ~> aggContent",
+				"derivedKPIs aggregate(groupBy(report_month,",
+				"          performanceSilver@campaign_id),",
+				"     influencer_engagements = sum(safe_influencer),",
+				"          total_engagements = sum(safe_engagements),",
+				"          avg_sentiment_score = avg(safe_sentiment)) ~> aggInfluencer",
+				"aggInfluencer derive(influencer_share_pct = iif(total_engagements>0, toDecimal((influencer_engagements*100)/total_engagements, 10, 4), toDecimal(0,10,4))) ~> aggInfluencer1",
+				"derivedROI sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:true,",
+				"     keys:['report_month + campaign_id'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> goldp5campaignroi",
+				"aggContent sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:true,",
+				"     keys:['report_date + platform + content_type'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sinkgoldp5contentperformance",
+				"aggInfluencer1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:true,",
+				"     keys:[(report_month+campaign_id)],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> goldp5influencerreachreport"
 			]
 		}
 	}

@@ -14,6 +14,47 @@
 			},
 			"compressionCodec": "snappy"
 		},
-		"schema": []
+		"schema": [
+			{
+				"name": "post_id",
+				"type": "UTF8"
+			},
+			{
+				"name": "campaign_id",
+				"type": "UTF8"
+			},
+			{
+				"name": "platform",
+				"type": "UTF8"
+			},
+			{
+				"name": "post_date",
+				"type": "DATE"
+			},
+			{
+				"name": "impressions",
+				"type": "INT64"
+			},
+			{
+				"name": "reach",
+				"type": "INT32"
+			},
+			{
+				"name": "clicks",
+				"type": "INT32"
+			},
+			{
+				"name": "shares",
+				"type": "INT64"
+			},
+			{
+				"name": "content_type",
+				"type": "UTF8"
+			},
+			{
+				"name": "posted_ts",
+				"type": "INT96"
+			}
+		]
 	}
 }

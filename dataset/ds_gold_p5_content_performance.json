@@ -1,0 +1,16 @@
+{
+	"name": "ds_gold_p5_content_performance",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sql_connection",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "gold_p5_content_performance"
+		}
+	}
+}

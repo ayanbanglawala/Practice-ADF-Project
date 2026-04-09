@@ -14,6 +14,33 @@
 			},
 			"compressionCodec": "snappy"
 		},
-		"schema": []
+		"schema": [
+			{
+				"name": "campaign_id",
+				"type": "UTF8"
+			},
+			{
+				"name": "campaign_name",
+				"type": "UTF8"
+			},
+			{
+				"name": "budget_usd",
+				"type": "DECIMAL",
+				"precision": 12,
+				"scale": 2
+			},
+			{
+				"name": "start_date",
+				"type": "DATE"
+			},
+			{
+				"name": "end_date",
+				"type": "DATE"
+			},
+			{
+				"name": "goal",
+				"type": "UTF8"
+			}
+		]
 	}
 }
