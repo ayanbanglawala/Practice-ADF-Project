@@ -13,6 +13,51 @@
 				"fileSystem": "bronze"
 			}
 		},
-		"schema": {}
+		"schema": {
+			"type": "object",
+			"properties": {
+				"since_id": {
+					"type": "string"
+				},
+				"next_since_id": {
+					"type": "string"
+				},
+				"has_more": {
+					"type": "boolean"
+				},
+				"data": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"engagement_id": {
+								"type": "string"
+							},
+							"post_id": {
+								"type": "string"
+							},
+							"user_id": {
+								"type": "string"
+							},
+							"engagement_type": {
+								"type": "string"
+							},
+							"reaction_type": {
+								"type": "string"
+							},
+							"engagement_ts": {
+								"type": "string"
+							},
+							"sentiment_score": {
+								"type": "number"
+							},
+							"influencer_flag": {
+								"type": "boolean"
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 }
