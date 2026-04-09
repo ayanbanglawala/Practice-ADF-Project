@@ -86,6 +86,30 @@
 							"waitOnCompletion": true,
 							"parameters": {}
 						}
+					},
+					{
+						"name": "Execute Gold Pipeline",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Execute Data Flow",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "p4_join_OBD_and_dim",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
 					}
 				],
 				"policy": {
@@ -95,7 +119,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/p1_csv_files_ingestion')]",
-				"[concat(variables('factoryId'), '/pipelines/p3_silver_datacleaning')]"
+				"[concat(variables('factoryId'), '/pipelines/p3_silver_datacleaning')]",
+				"[concat(variables('factoryId'), '/pipelines/p4_join_OBD_and_dim')]"
 			]
 		},
 		{
@@ -1056,6 +1081,69 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/ds_gold_p5_campaign_roi_summary')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sql_connection",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "gold_p5_campaign_roi_summary"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sql_connection')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_gold_p5_content_performance')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sql_connection",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "gold_p5_content_performance"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sql_connection')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_gold_p5_influencer_reach_report')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sql_connection",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "gold_p5_influencer_reach_report"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sql_connection')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ds_read_api_jsons')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -1455,6 +1543,28 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/ls_sql_connection')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('ls_sql_connection_properties_typeProperties_server')]",
+					"database": "[parameters('ls_sql_connection_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('ls_sql_connection_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('ls_sql_connection_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Dataflow')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -1660,91 +1770,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/ls_sql_connection')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureSqlDatabase",
-				"typeProperties": {
-					"server": "[parameters('ls_sql_connection_properties_typeProperties_server')]",
-					"database": "[parameters('ls_sql_connection_properties_typeProperties_database')]",
-					"encrypt": "mandatory",
-					"trustServerCertificate": false,
-					"authenticationType": "SQL",
-					"userName": "[parameters('ls_sql_connection_properties_typeProperties_userName')]",
-					"password": {
-						"type": "SecureString",
-						"value": "[parameters('ls_sql_connection_password')]"
-					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_gold_p5_campaign_roi_summary')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_sql_connection",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": "dbo",
-					"table": "gold_p5_campaign_roi_summary"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_sql_connection')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_gold_p5_content_performance')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_sql_connection",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": "dbo",
-					"table": "gold_p5_content_performance"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_sql_connection')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_gold_p5_influencer_reach_report')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_sql_connection",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": "dbo",
-					"table": "gold_p5_influencer_reach_report"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_sql_connection')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/goldDataFlow')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -1901,19 +1926,19 @@
 						"joinCampaign derive(report_month = left(toString(post_date), 7),",
 						"          safe_engagements = coalesce(total_engagements, 0L),",
 						"          safe_influencer = coalesce(influencer_engagements, 0L),",
-						"          safe_budget = coalesce(budget_usd, toDecimal(0,18,2)),",
+						"          budget_usd = coalesce(budget_usd, toDecimal(0,18,2)),",
 						"          safe_sentiment = coalesce(avg_sentiment_score, toDecimal(0,10,4)),",
 						"          engagement_rate = toDecimal((coalesce(total_engagements,0L)*100) / iif(impressions>0, toLong(impressions), toLong(1)), 10, 4)) ~> derivedKPIs",
 						"derivedKPIs aggregate(groupBy(report_month,",
 						"          performanceSilver@campaign_id,",
 						"          campaign_name,",
-						"          safe_budget),",
+						"          budget_usd),",
 						"     total_impressions = sum(impressions),",
 						"          total_reach = sum(toLong(reach)),",
 						"          total_clicks = sum(toLong(clicks)),",
 						"          total_shares = sum(shares)) ~> aggROI",
 						"aggROI derive(ctr_pct = toDecimal((total_clicks*100) / iif(total_impressions>0, total_impressions, toLong(1)), 10, 4),",
-						"          cost_per_click = iif(total_clicks>0, toDecimal(safe_budget / toDecimal(total_clicks,18,2), 10, 4), toDecimal(0,10,4))) ~> derivedROI",
+						"          cost_per_click = iif(total_clicks>0, toDecimal(budget_usd / toDecimal(total_clicks,18,2), 10, 4), toDecimal(0,10,4))) ~> derivedROI",
 						"derivedKPIs aggregate(groupBy(post_date,",
 						"          platform,",
 						"          content_type),",
