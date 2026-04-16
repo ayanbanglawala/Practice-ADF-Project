@@ -5,11 +5,17 @@
 		"annotations": [],
 		"type": "Odbc",
 		"typeProperties": {
-			"connectionString": {
-				"type": "SecureString",
-				"value": "**********"
-			},
-			"authenticationType": "Anonymous"
+			"connectionString": "Driver={MySQL ODBC 9.6 Unicode Driver};Server=localhost;Port=3306;Database=oil_dataset;Option=3;",
+			"authenticationType": "Basic",
+			"userName": "root",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "ls_AzureKeyVault",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "MySqlPassword"
+			}
 		},
 		"connectVia": {
 			"referenceName": "MyLocalGateway",
