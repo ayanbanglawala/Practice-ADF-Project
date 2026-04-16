@@ -1,0 +1,6 @@
+{
+	"name": "MyLocalGateway",
+	"properties": {
+		"type": "SelfHosted"
+	}
+}
