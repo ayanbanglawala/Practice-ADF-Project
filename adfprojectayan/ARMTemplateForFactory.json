@@ -15,6 +15,14 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'ls_sql_connection'"
 		},
+		"ls_mysql_connection_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_mysql_connection'"
+		},
+		"ls_AzureKeyVault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://ayan-key-vault-pr.vault.azure.net/"
+		},
 		"ls_adls_connection_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://storageprojectayan.dfs.core.windows.net/"
@@ -34,6 +42,10 @@
 		"ls_sql_connection_properties_typeProperties_userName": {
 			"type": "string",
 			"defaultValue": "ayan"
+		},
+		"ls_keyvault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://ayan-key-vault-pr.vault.azure.net/"
 		}
 	},
 	"variables": {
@@ -1511,6 +1523,19 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/ls_AzureKeyVault')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('ls_AzureKeyVault_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ls_adls_connection')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -1561,6 +1586,16 @@
 						"value": "[parameters('ls_sql_connection_password')]"
 					}
 				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/MyLocalGateway')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "SelfHosted",
+				"typeProperties": {}
 			},
 			"dependsOn": []
 		},
@@ -2010,6 +2045,42 @@
 				"[concat(variables('factoryId'), '/datasets/ds_gold_p5_content_performance')]",
 				"[concat(variables('factoryId'), '/datasets/ds_gold_p5_influencer_reach_report')]"
 			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_mysql_connection')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "Odbc",
+				"typeProperties": {
+					"connectionString": {
+						"type": "SecureString",
+						"value": "[parameters('ls_mysql_connection_connectionString')]"
+					},
+					"authenticationType": "Anonymous"
+				},
+				"connectVia": {
+					"referenceName": "MyLocalGateway",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/MyLocalGateway')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_keyvault')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('ls_keyvault_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
 		}
 	]
 }

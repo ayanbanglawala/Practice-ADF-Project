@@ -6,12 +6,223 @@
 			"type": "string",
 			"metadata": "Data Factory name",
 			"defaultValue": "adfprojectayan"
+		},
+		"ls_mysql_connection_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_mysql_connection'"
 		}
 	},
 	"variables": {
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_read_engagements_silver')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls_connection",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "silver"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
+					{
+						"name": "engagement_id",
+						"type": "UTF8"
+					},
+					{
+						"name": "engagement_ts",
+						"type": "UTF8"
+					},
+					{
+						"name": "engagement_type",
+						"type": "UTF8"
+					},
+					{
+						"name": "influencer_flag",
+						"type": "BOOLEAN"
+					},
+					{
+						"name": "post_id",
+						"type": "UTF8"
+					},
+					{
+						"name": "reaction_type",
+						"type": "UTF8"
+					},
+					{
+						"name": "sentiment_score",
+						"type": "DECIMAL",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "user_id",
+						"type": "UTF8"
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_read_performance_csvs')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls_connection",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "bronze"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "post_id",
+						"type": "String"
+					},
+					{
+						"name": "campaign_id",
+						"type": "String"
+					},
+					{
+						"name": "platform",
+						"type": "String"
+					},
+					{
+						"name": "post_date",
+						"type": "String"
+					},
+					{
+						"name": "impressions",
+						"type": "String"
+					},
+					{
+						"name": "reach",
+						"type": "String"
+					},
+					{
+						"name": "clicks",
+						"type": "String"
+					},
+					{
+						"name": "shares",
+						"type": "String"
+					},
+					{
+						"name": "content_type",
+						"type": "String"
+					},
+					{
+						"name": "posted_ts",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_read_silver_performance')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls_connection",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "silver"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
+					{
+						"name": "post_id",
+						"type": "UTF8"
+					},
+					{
+						"name": "campaign_id",
+						"type": "UTF8"
+					},
+					{
+						"name": "platform",
+						"type": "UTF8"
+					},
+					{
+						"name": "post_date",
+						"type": "DATE"
+					},
+					{
+						"name": "impressions",
+						"type": "INT64"
+					},
+					{
+						"name": "reach",
+						"type": "INT32"
+					},
+					{
+						"name": "clicks",
+						"type": "INT32"
+					},
+					{
+						"name": "shares",
+						"type": "INT64"
+					},
+					{
+						"name": "content_type",
+						"type": "UTF8"
+					},
+					{
+						"name": "posted_ts",
+						"type": "INT96"
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_mysql_connection')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "Odbc",
+				"typeProperties": {
+					"connectionString": {
+						"type": "SecureString",
+						"value": "[parameters('ls_mysql_connection_connectionString')]"
+					},
+					"authenticationType": "Anonymous"
+				},
+				"connectVia": {
+					"referenceName": "MyLocalGateway",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": []
+		},
 		{
 			"name": "[concat(parameters('factoryName'), '/p1_csv_files_ingestion')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
@@ -762,7 +973,9 @@
 					]
 				}
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_read_performance_csvs')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/goldDataFlow')]",
@@ -997,7 +1210,10 @@
 					]
 				}
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_read_silver_performance')]",
+				"[concat(variables('factoryId'), '/datasets/ds_read_engagements_silver')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/p1_p2_pipeline_Exe')]",
