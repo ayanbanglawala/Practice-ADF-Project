@@ -1,0 +1,10 @@
+{
+	"name": "ls_keyvault",
+	"properties": {
+		"annotations": [],
+		"type": "AzureKeyVault",
+		"typeProperties": {
+			"baseUrl": "https://ayan-key-vault-pr.vault.azure.net/"
+		}
+	}
+}
