@@ -1,0 +1,12 @@
+{
+	"name": "ds_watermark",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_mysql_connection",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "OdbcTable",
+		"schema": []
+	}
+}

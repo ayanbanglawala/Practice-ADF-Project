@@ -1,0 +1,32 @@
+{
+	"name": "MySQLToParquet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_connection",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"folder_name": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@{utcNow()}.parquet",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "MySQL/@{dataset().folder_name}",
+					"type": "Expression"
+				},
+				"fileSystem": "bronze"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	}
+}

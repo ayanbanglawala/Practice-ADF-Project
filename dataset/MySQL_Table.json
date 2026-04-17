@@ -1,0 +1,23 @@
+{
+	"name": "MySQL_Table",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_mysql_connection",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"table_name": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"type": "OdbcTable",
+		"schema": [],
+		"typeProperties": {
+			"tableName": {
+				"value": "@dataset().table_name",
+				"type": "Expression"
+			}
+		}
+	}
+}
