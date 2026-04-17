@@ -11,9 +11,6 @@
 		"ls_sql_connection_password": {
 			"value": ""
 		},
-		"ls_mysql_connection_connectionString": {
-			"value": ""
-		},
 		"ls_AzureKeyVault_properties_typeProperties_baseUrl": {
 			"value": "https://ayan-key-vault-pr.vault.azure.net/"
 		},
@@ -23,6 +20,12 @@
 		"ls_api_connection_properties_typeProperties_url": {
 			"value": "https://mocki.io"
 		},
+		"ls_keyvault_properties_typeProperties_baseUrl": {
+			"value": "https://ayan-key-vault-pr.vault.azure.net/"
+		},
+		"ls_mysql_connection_properties_typeProperties_userName": {
+			"value": "root"
+		},
 		"ls_sql_connection_properties_typeProperties_server": {
 			"value": "sqlserverayan.database.windows.net"
 		},
@@ -31,9 +34,6 @@
 		},
 		"ls_sql_connection_properties_typeProperties_userName": {
 			"value": "ayan"
-		},
-		"ls_keyvault_properties_typeProperties_baseUrl": {
-			"value": "https://ayan-key-vault-pr.vault.azure.net/"
 		},
 		"containerUri": {
 			"value": ""

@@ -27,6 +27,10 @@
 			"type": "string",
 			"defaultValue": "https://mocki.io"
 		},
+		"ls_keyvault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://ayan-key-vault-pr.vault.azure.net/"
+		},
 		"ls_sql_connection_properties_typeProperties_server": {
 			"type": "string",
 			"defaultValue": "sqlserverayan.database.windows.net"
@@ -38,10 +42,6 @@
 		"ls_sql_connection_properties_typeProperties_userName": {
 			"type": "string",
 			"defaultValue": "ayan"
-		},
-		"ls_keyvault_properties_typeProperties_baseUrl": {
-			"type": "string",
-			"defaultValue": "https://ayan-key-vault-pr.vault.azure.net/"
 		}
 	},
 	"variables": {
@@ -94,6 +94,19 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/ls_keyvault')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('ls_keyvault_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ls_sql_connection')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -122,19 +135,6 @@
 			"properties": {
 				"type": "SelfHosted",
 				"typeProperties": {}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ls_keyvault')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureKeyVault",
-				"typeProperties": {
-					"baseUrl": "[parameters('ls_keyvault_properties_typeProperties_baseUrl')]"
-				}
 			},
 			"dependsOn": []
 		},
@@ -181,6 +181,43 @@
 						"fileName": "engagements_silver.parquet",
 						"folderPath": "Engagements",
 						"fileSystem": "silver"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls_connection')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/MySQLToParquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls_connection",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folder_name": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@{utcNow()}.parquet",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "MySQL/@{dataset().folder_name}",
+							"type": "Expression"
+						},
+						"fileSystem": "bronze"
 					},
 					"compressionCodec": "snappy"
 				},
@@ -555,57 +592,6 @@
 					{
 						"name": "goal",
 						"type": "String"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls_connection')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_read_campaign_silver')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_adls_connection",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileSystem": "silver"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": [
-					{
-						"name": "campaign_id",
-						"type": "UTF8"
-					},
-					{
-						"name": "campaign_name",
-						"type": "UTF8"
-					},
-					{
-						"name": "budget_usd",
-						"type": "DECIMAL",
-						"precision": 12,
-						"scale": 2
-					},
-					{
-						"name": "start_date",
-						"type": "DATE"
-					},
-					{
-						"name": "end_date",
-						"type": "DATE"
-					},
-					{
-						"name": "goal",
-						"type": "UTF8"
 					}
 				]
 			},
