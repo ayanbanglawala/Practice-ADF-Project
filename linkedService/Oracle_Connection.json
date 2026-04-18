@@ -13,7 +13,7 @@
 			"encryptionTypesClient": "(AES128, AES192, AES256, 3DES112, 3DES168)",
 			"cryptoChecksumClient": "accepted",
 			"cryptoChecksumTypesClient": "(SHA1, SHA256, SHA384, SHA512)",
-			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiI4OWM5MTJlMi03YmNjLTQ2ZWYtYWI0OC04MDM1M2RiZmNlYzYiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiI1MDFjMzgxZS1lZTM3LTQ1OGItYmM4Zi1kNjZiZWJjMjViZTQiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
 		},
 		"connectVia": {
 			"referenceName": "MyLocalGateway",
